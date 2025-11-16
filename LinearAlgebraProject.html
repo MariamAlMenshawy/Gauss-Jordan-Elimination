@@ -1,0 +1,237 @@
+<html>
+    <head>
+        <title>Linear Project</title>
+        <style>
+            .matrix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 5px 0;
+}
+
+.row {
+    display: flex;
+}
+
+.cell {
+    width: 50px;
+    text-align: center;
+    border: 1px solid #444;
+    margin: 1px;
+    padding: 5px 0;
+}
+
+.bracket-left, .bracket-right {
+    font-size: 50px;
+    margin: 0 5px;
+}
+
+
+        </style>
+    </head>
+    <body>
+        <h1><center>Gauss-Jordan Elimination</center></h1>
+        <hr>
+        <center>
+
+        <h2>Enter the number of equations and variables</h2>
+        <h3>Equations Number: <input type="text" id="eq"></h3>
+        <h3>Variables Number: <input type="text" id="va"></h3>
+        <h3><button onclick="makeMatrix()">Make Matrix</button></h3>
+
+        <div id="matrix"></div>
+        <br>
+        <button onclick="solve()">Solve</button>
+        
+        <hr>
+        <h3>Solution Steps: </h3>
+        <div id="output"></div>
+
+        
+
+        <script>
+            function makeMatrix(){
+                let e = parseInt(document.getElementById("eq").value);
+                let v = parseInt(document.getElementById("va").value);
+
+                let html="<h3>Enter Augmented Matrix</h3><table>";
+                for(let i=0 ; i<e ; i++){
+                    html += "<tr>";
+                    for(let j=0 ; j<=v ; j++){
+                        html += `<td><input id="c_${i}_${j}" size="4"></td>`;
+                    }
+                    html += "</tr>";
+                }  
+                
+                html += "</table>";
+                document.getElementById("matrix").innerHTML = html;
+            }
+
+            function logStep(text) {
+                document.getElementById("output").innerHTML += "<p>" + text + "</p>";
+            }
+            
+            function formatNumber(num) {
+                if (Number.isInteger(num)) {
+                    return num; 
+                } else {
+                    return num.toFixed(2); 
+                }
+            }
+
+
+            function solve(){
+
+                function displayMatrix(e, v, matrix) {
+                    let rows = e;
+                    let cols = v + 1;
+            
+                    let html = `<div class="matrix">`;
+                    html += `<div class="values">`;
+                        for (let i = 0; i < rows; i++) {
+                            html += `<div class="row">`;
+                            for (let j = 0; j < cols; j++) {
+                                html += `<span class="cell">${formatNumber(matrix[i][j])}</span>`;
+                            }
+                            html += `</div>`;
+                        }
+
+                    html += `</div>`;
+                    html += `</div><br/>`;
+
+                    document.getElementById("output").innerHTML += html;
+                }
+
+                function rowSwap(e,v,matrix,row1,row2){
+                    let temp = matrix[row1];
+                    matrix[row1] = matrix[row2];
+                    matrix[row2] = temp;
+
+                    logStep("R"+(row1+1)+" <---> "+"R"+(row2+1)+"\n");
+                    displayMatrix(e,v,matrix);
+                }
+
+                function multiRowAndAdd(e,v,matrix,c,row1,row2){
+                    let cols=v+1;
+                    let num = (-1*matrix[row2][c]);
+                    for(let j=0 ; j<cols ; j++){
+                        matrix[row2][j]+=(num * matrix[row1][j]);
+                    }
+                    
+                    logStep((formatNumber(num))+" R"+(row1+1)+" + "+"R"+(row2+1)+" = "+"R"+(row2+1)+"\n")
+                    displayMatrix(e,v,matrix);
+                }
+
+                function multiRow(e,v,matrix,c,row1){
+                    let cols=v+1;
+                    let div=1/matrix[row1][c];
+                    for(let j=0 ; j<cols; j++){
+                        matrix[row1][j] = div * matrix[row1][j];
+                    }
+
+                    logStep((formatNumber(div))+" R"+(row1+1)+ " = "+ "R"+(row1+1)+" to be leading 1 \n")
+                    displayMatrix(e,v,matrix);
+                }
+
+                let e = parseInt(document.getElementById("eq").value);
+                let v = parseInt(document.getElementById("va").value);
+                
+                let row = e;
+                let col = v+1;
+                let matrix = [];
+                
+                for(let i=0; i<row; i++){
+                    let r = [];
+                    for(let j=0; j<col; j++){
+                        r.push(Number(document.getElementById(`c_${i}_${j}`).value));
+                    }
+                    matrix.push(r);
+                }
+
+                console.log("Gauss-Jordan Elimination: \n");
+
+                let done = false;
+                while(!done){
+                    done = true;
+                    for(let i=0 ; i<row ; i++){
+                        for(let j=0 ; j<col ; j++){
+                            if(i==j && matrix[i][j]==0){
+                                if(i+1<row){
+                                    rowSwap(e,v,matrix,i,i+1);
+                                    done=false;
+                                    break;
+                                }
+                            }
+                            else if(i==j && matrix[i][j]==1){
+                                for(let k=0 ; k<row ;k++){
+                                    if(k!=i){
+                                        multiRowAndAdd(e,v,matrix,j,i,k);
+                                    }
+                                }
+                            }
+                            else if(i==j && matrix[i][j]!= 1){
+                                multiRow(e,v,matrix,j,i);
+                                for(let k=0 ; k<row ;k++){
+                                    if(k!=i){
+                                        multiRowAndAdd(e,v,matrix,j,i,k);
+                                    }
+                                }
+                            }
+                        }
+                        if(!done) break;
+                    }
+                }
+                
+                noSolution = false;
+                inFinity = false;
+
+                for(let i=0 ; i<row ;i++){
+                    allzero = true;
+                    for(let j=0 ; j<v ; j++){
+                        if(matrix[i][j]!=0){
+                            allzero = false;
+                            break;
+                        }
+                    }
+                    if(allzero && matrix[i][v]!= 0){
+                        noSolution = true;
+                        break;
+                    }
+                    if(allzero && matrix[i][v]==0){
+                        inFinity=true;
+                    }
+                }
+                
+                if(noSolution){
+                    logStep("No solution exists for this system.\n");
+                    let html=`<hr>`;
+                    document.getElementById("output").innerHTML += html;
+                }
+                else if(inFinity){
+                    logStep("Infinite solutions exist for this system.\n");
+                    let html=`<hr>`;
+                    document.getElementById("output").innerHTML += html;
+                }
+                else{
+                    solutions=[];
+                    for(let i=0 ;i<v; i++){
+                        solutions[i]=matrix[i][v];
+                    }
+                    logStep("Unique solution:\n");
+
+                    for(let i=0 ; i<v ; i++){
+                        logStep("X"+(i+1)+" = "+(solutions[i]));
+                    }
+
+                    let html=`<hr>`;
+                    document.getElementById("output").innerHTML += html;
+                }
+            }
+            
+        </script>
+
+        </center>
+         
+
+    </body>
+</html>
