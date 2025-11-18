@@ -75,7 +75,7 @@
                 if (Number.isInteger(num)) {
                     return num; 
                 } else {
-                    return num.toFixed(2); 
+                    return num.toFixed(3); 
                 }
             }
 
@@ -220,7 +220,7 @@
                     logStep("Unique solution:\n");
 
                     for(let i=0 ; i<v ; i++){
-                        logStep("X"+(i+1)+" = "+(solutions[i]));
+                        logStep("X"+(i+1)+" = "+(formatNumber(solutions[i])));
                     }
 
                     let html=`<hr>`;
